@@ -42,10 +42,15 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	log.Printf("Are you sure you want to permanently delete the bucket '%s' and all its contents? THIS IS NOT REVERSABLE [yes/no]", *flgBucket)
 	confirmation, _ := reader.ReadString('\n')
-	log.Printf("INPUT: %s", confirmation)
-	if strings.Compare(confirmation, "yes") == 0 {
+	confirmation = strings.TrimRight(confirmation, "\n")
+	if confirmation != "yes" {
 		os.Exit(1)
 	}
 
-	_, err = svc.DeleteBucket(delReq)
+	output, err := svc.DeleteBucket(delReq)
+	if err != nil {
+		log.Printf("ERROR: \n\n %s", err.Error())
+	}
+
+	log.Printf("out: %s", output)
 }
