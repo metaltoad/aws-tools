@@ -3,12 +3,14 @@ package main
 import (
 	"log"
 	"os"
+	"flag"
+	//"bufio"
+	//"strings"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"flag"
-	"bufio"
-	"strings"
+	"github.com/aws/aws-sdk-go/aws"
 )
 
 var flgBucket *string
@@ -35,22 +37,42 @@ func main() {
 	}
 
 	svc := s3.New(sess)
-	delReq := &s3.DeleteBucketInput{
+	//delReq := &s3.DeleteBucketInput{
+	//	Bucket: flgBucket,
+	//}
+
+	//reader := bufio.NewReader(os.Stdin)
+	//log.Printf("Are you sure you want to permanently delete the bucket '%s' and all its contents? THIS IS NOT REVERSABLE [yes/no]", *flgBucket)
+	//confirmation, _ := reader.ReadString('\n')
+	//confirmation = strings.TrimRight(confirmation, "\n")
+	//if confirmation != "yes" {
+	//	os.Exit(1)
+	//}
+
+	// Delete all objects in a bucket
+	listObjInput := &s3.ListObjectsV2Input{
 		Bucket: flgBucket,
+		MaxKeys: aws.Int64(5),
 	}
+	pageNum := 0
+	err = svc.ListObjectsV2Pages(listObjInput,
+		func(page *s3.ListObjectsV2Output, lastPage bool) bool {
+			pageNum++
+			var  obj *s3.Object
+			for _, obj = range page.Contents {
+				fmt.Printf("OBJ: %s", *obj.Key)
+				svc.DeleteObject(&s3.DeleteObjectInput{
+					Bucket: flgBucket,
+					Key: aws.String(obj.Key),
+				})
+			}
+			return !page.IsTruncated()
+		})
 
-	reader := bufio.NewReader(os.Stdin)
-	log.Printf("Are you sure you want to permanently delete the bucket '%s' and all its contents? THIS IS NOT REVERSABLE [yes/no]", *flgBucket)
-	confirmation, _ := reader.ReadString('\n')
-	confirmation = strings.TrimRight(confirmation, "\n")
-	if confirmation != "yes" {
-		os.Exit(1)
-	}
-
-	output, err := svc.DeleteBucket(delReq)
-	if err != nil {
-		log.Printf("ERROR: \n\n %s", err.Error())
-	}
-
-	log.Printf("out: %s", output)
+	//output, err := svc.DeleteBucket(delReq)
+	//if err != nil {
+	//	log.Printf("ERROR: \n\n %s", err.Error())
+	//}
+	//
+	//log.Printf("out: %s", output)
 }
