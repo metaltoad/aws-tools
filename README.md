@@ -8,7 +8,7 @@ Various Tools that use the AWS Go SDK
 
 ### Install
 1. Install Go >= v1.7  
-1. `go get -u github.com/metaltoad/aws-tools`
+1. `go get -u github.com/metaltoad/aws-tools/cmd/$COMMAND` (Replace $COMMAND with a one of the commands listed above)
 
 
 ### Develop
